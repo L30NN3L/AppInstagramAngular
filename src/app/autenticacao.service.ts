@@ -41,10 +41,46 @@ export class Autenticacao {
           .then((idToken: string) => {
             this.token_id = idToken;
          //   console.log(this.token_id);
+            localStorage.setItem('idToken', idToken);
             this.router.navigate(['/home']);
           });
       })
       .catch((error: Error) => console.log(error));
+
+  }
+
+  public autenticado(): boolean {
+   /* let x = true;
+
+     if (this.token_id !== undefined) {
+      x = true;
+    } else {
+      x = false;
+    }
+
+    return x; */
+
+   if (this.token_id === undefined && localStorage.getItem('idToken') != null ) {
+         this.token_id = localStorage.getItem('idToken');
+   }
+
+   if ( this.token_id === undefined ) {
+     this.router.navigate(['/']);
+   }
+
+    // O loco meu!!!
+    return this.token_id !== undefined;
+
+  }
+
+  public sair(): void {
+
+    firebase.auth().signOut()
+      .then(() => {
+        localStorage.removeItem('idToken');
+        this.token_id = undefined;
+        this.router.navigate(['/']);
+      });
 
   }
 
