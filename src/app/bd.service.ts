@@ -11,8 +11,6 @@ export class Bd {
 
   public publicar(publicacao: any): void {
 
-
-
     console.log(publicacao);
 
     firebase.database().ref(`publicacoes/${btoa(publicacao.email)}`)
@@ -44,13 +42,71 @@ export class Bd {
                      );
 
                   });
-
-
-
-
-
-
-
    // console.log('Chegamos até o serviço responsável pelo controle de dados');
   }
+
+ public consultaPublicacoes(emailUsuario: string): Promise<any> {
+
+  return new Promise((resolve, reject) => {
+
+    // consultar as publicações (database)
+    firebase.database().ref(`publicacoes/${btoa(emailUsuario)}`)
+    .orderByKey()
+    .once('value')
+    .then((snapshot: any) => {
+      console.log(snapshot.val());
+
+      let publicacoes: Array<any> = [];
+
+      snapshot.forEach((childSnapshot: any) => {
+
+        let publicacao = childSnapshot.val();
+        publicacao.key = childSnapshot.key;
+
+        publicacoes.push(publicacao);
+
+      } );
+
+      // console.log(publicacoes);
+      // resolve(publicacoes);
+
+      return publicacoes.reverse();
+
+    } )
+    .then((publicacoes: any) => {
+    //  console.log(publicacoes);
+
+    publicacoes.forEach((publicacao) => {
+
+        // consultar a url da imagem (storage)
+        firebase.storage().ref()
+          .child(`imagens/${publicacao.key}`)
+          .getDownloadURL()
+          .then((url: string) => {
+            // console.log(url);
+
+              publicacao.url_imagem = url;
+
+              // consultar o nome do usuário
+              firebase.database().ref(`usuario_detalhe/${btoa(emailUsuario)}`)
+                .once('value')
+                .then((snapshot: any) => {
+                  publicacao.nome_usuario = snapshot.val().nome_usuario;
+
+                });
+
+            });
+
+          });
+
+          resolve(publicacoes);
+
+    });
+
+  });
+
+}
+
+
+
 }
